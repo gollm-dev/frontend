@@ -11,19 +11,18 @@ export default function Home() {
 
     const [isHideInput, setIsHideInput] = useState<boolean>(false);
 
-    const handleClick = async() => {
-        try {
+    const [isAlreadyDownloaded, setIsAlreadyDownload ] = useState<boolean>(false);
+    const [status, setStatus] = useState<string>("");
+
+const handleClick = async() => {
             const response= await axios.post("https://api.gollm.xyz/downloadModel", {
-                model_name: modelName.replace(/\//g, '-_-')
+                model_name: modelName
+            }).catch(() => {
+                setStatus("downloaded")
+                setIsHideInput(true)
             });
 
-            if(response.status === 200) {
-                setIsHideInput(true)
-            }
-
-        } catch(e) {
-            console.log(e);
-        }
+            setIsHideInput(true)
     }
 
     return (
@@ -47,12 +46,12 @@ export default function Home() {
                   className="box-border inline-block w-1 h-4 ml-2 -mb-2 bg-white md:-mb-4 md:h-10 animate-cursor will-change-transform"
               ></span>
           </h1>
-          <div className={"absolute top-20 right-[300px] bg-[#f0c4ff] border border-black w-40 h-10 rounded-3xl p-6"}>
-
-          </div>
           {
               isHideInput ? <TelegramLinkComponent
                   modelName={modelName}
+                  isAlreadyDownloaded={isAlreadyDownloaded}
+                  status={status}
+                  setStatus={setStatus}
               /> : (  <div className="group flex flex-row w-[600px] mt-5">
                   <div className="flex items-center justify-center w-full">
                       <input
@@ -82,41 +81,60 @@ export default function Home() {
       ;
 }
 
-const TelegramLinkComponent = ({ modelName } : {modelName: string} ) => {
+const TelegramLinkComponent = ({ modelName, isAlreadyDownloaded, status, setStatus } : {modelName: string, isAlreadyDownloaded: boolean, status: string, setStatus: (value: string) => void; } ) => {
     const [timeLeft, setTimeLeft] = useState(4);
-    const [isDownloadedStatus, setIsDownloadedStatus] = useState<boolean>(false)
+    const [isDownloadedStatus, setIsDownloadedStatus] = useState<boolean>(isAlreadyDownloaded);
+    const [ isDownloading, setIsDownloading] = useState<boolean>(true);
+
     const totalSeconds = 4;
 
-    useEffect(() => {
-        const fetchInfo = async () => {
-            try {
-                const result = await axios.post("https://api.gollm.xyz/downloadStatus", {
-                    model_name: modelName.replace(/\//g, '-_-')
-                });
-
-                if(result.status === 200 && result.data.status === "Downloaded") {
-                    setIsDownloadedStatus(true);
-                }
-            } catch(e) {
-                console.log(e);
+    const fetchInfo = async () => {
+        try {
+            if(isDownloadedStatus) {
+                return null;
             }
-        }
 
-        if (!isDownloadedStatus) {
-            void fetchInfo();
-        } else {
-            setTimeLeft(prevTimeLeft => prevTimeLeft - 1);
+            const result = await axios.post("https://api.gollm.xyz/downloadStatus", {
+                model_name: modelName
+            });
+            console.log("Result is", result.data)
+    if(result.data.status === "downloaded") {
+        setStatus("downloaded");
+        setIsDownloadedStatus(true);
+        setIsDownloading(false);
+    } else {
+        setStatus("downloading")
+        setIsDownloading(true);
+    }
+
+
+        } catch(e) {
+            console.log(e);
         }
-    }, []);
+    }
+
+    useEffect(() => {
+        if (!isDownloadedStatus && isDownloading) {
+            void fetchInfo();
+        }
+    }, [isDownloadedStatus, isDownloading]);
+
+    useEffect(() => {
+        let downloadInterval: any;
+        if (isDownloading) {
+            downloadInterval = setInterval(() => {
+                void fetchInfo();
+            }, 5000);
+        }
+        return () => clearInterval(downloadInterval);
+    }, [isDownloading]);
 
     useEffect(() => {
         let intervalId: any;
 
         if ( timeLeft > 0) {
             intervalId = setInterval(() => {
-                if(timeLeft - 1 !== 0) {
                     setTimeLeft(prevTimeLeft => prevTimeLeft - 1);
-                }
             }, 1000);
         }
 
@@ -127,9 +145,6 @@ const TelegramLinkComponent = ({ modelName } : {modelName: string} ) => {
 
     const percentage = ((totalSeconds - timeLeft) / totalSeconds) * 100;
 
-    if(isDownloadedStatus) {
-        setTimeLeft(prevTimeLeft => prevTimeLeft - 1)
-    }
     if(timeLeft !== 0 || !isDownloadedStatus) {
         return (
             <div className="h-2 w-[800px] bg-neutral-300 rounded-3xl">
@@ -138,11 +153,17 @@ const TelegramLinkComponent = ({ modelName } : {modelName: string} ) => {
         )
     }
 
+
     return (
-        <a
-            href={`https://t.me/gollm_bot?start=${modelName.replace(/\//g, '-_-')}`}
-           className={" bg-[#f0c4ff] border border-black w-40 h-10 rounded-3xl p-6 text-white flex justify-center items-center"}>
-            <>Start a Bot</>
-        </a >
+        <div>
+            <h1 className={"mb-1 font-mono text-xl text-black"}>
+               {`Status: ${status}`}
+            </h1>
+            <a
+                href={`https://t.me/gollm_bot?start=${modelName.replace(/\//g, '-_-')}`}
+                className={" bg-[#f0c4ff] border border-black w-40 h-10 mt-5 rounded-3xl p-6 text-white flex justify-center items-center"}>
+                <>Start a Bot</>
+            </a>
+        </div>
     )
 }
