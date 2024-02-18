@@ -28,14 +28,14 @@ const handleClick = async() => {
     return (
       <div
           className={"relative max-w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-blue-200 bg-blur to-[#fffccc] overflow-hidden"}>
-          <svg width="1000" height="1000" className={"transform -rotate-90 absolute top-[-450px] left-[-130px] "}>
+          <svg width="1000" height="1000" className={"hidden lg:block transform -rotate-90 absolute top-[-450px] left-[-130px] "}>
               <path d="M 250 100 C 200 100 100 250 150 350 Q 250 550 800 600 " fill="none" stroke="#fffccc"
                     strokeWidth="50"/>
           </svg>
-          <h1 className={`${monteserrat.className} mb-1 font-mono font-bold text-[10rem] text-black `}>
+          <h1 className={`${monteserrat.className} mb-1 font-mono font-bold text-[6rem] lg:text-[10rem]  text-black `}>
               GOLLM!
           </h1>
-          <h1 className={"mb-1 font-mono text-xl text-black"}>
+          <h1 className={"mb-1 font-mono break-normal  text-xl text-black"}>
               Paste AI <br className="block md:hidden"/>
               <span
                   className="inline-flex h-[60px] pt-2 overflow-x-hidden animate-type group-hover:animate-type-reverse whitespace-nowrap text-brand-accent will-change-transform"
@@ -52,7 +52,7 @@ const handleClick = async() => {
                   isAlreadyDownloaded={isAlreadyDownloaded}
                   status={status}
                   setStatus={setStatus}
-              /> : (  <div className="group flex flex-row w-[600px] mt-5">
+              /> : (  <div className="group flex flex-row w-full lg:w-[600px] mt-5">
                   <div className="flex items-center justify-center w-full">
                       <input
                           id="10"
@@ -73,7 +73,7 @@ const handleClick = async() => {
 
 
           <div
-              className={"w-[400px] h-[400px] bg-transparent border-[70px] border-pink-300  rounded-full absolute bottom-[-150px] right-[-100px]"}>
+              className={"hidden lg:block w-[400px] h-[400px] bg-transparent border-[70px] border-pink-300  rounded-full absolute bottom-[-150px] right-[-100px]"}>
 
           </div>
       </div>
