@@ -12,17 +12,18 @@ export default function Home() {
     const [isHideInput, setIsHideInput] = useState<boolean>(false);
 
     const handleClick = async() => {
-        setIsHideInput(true)
-        // try {
-        //     const response= await axios.post("https://api.gollm.xyz/downloadModel", {
-        //         model_name: modelName.replace(/\//g, '-_-')
-        //     });
-        //     if(response.status === 200) {
-        //         setIsHideInput(true)
-        //     }
-        // } catch(e) {
-        //     console.log(e);
-        // }
+        try {
+            const response= await axios.post("https://api.gollm.xyz/downloadModel", {
+                model_name: modelName.replace(/\//g, '-_-')
+            });
+
+            if(response.status === 200) {
+                setIsHideInput(true)
+            }
+
+        } catch(e) {
+            console.log(e);
+        }
     }
 
     return (
@@ -82,33 +83,40 @@ export default function Home() {
 }
 
 const TelegramLinkComponent = ({ modelName } : {modelName: string} ) => {
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(4);
     const [isDownloadedStatus, setIsDownloadedStatus] = useState<boolean>(false)
-    const totalSeconds = 5;
+    const totalSeconds = 4;
 
-    // useEffect(() => {
-    //     const fetchInfo = async () => {
-    //         try {
-    //             const result = await axios.post("https://api.gollm.xyz/downloadStatus", {
-    //                 model_name: modelName.replace(/\//g, '-_-')
-    //             });
-    //
-    //             if(result.status === 200 && result.data.status === "Downloaded") {
-    //                 setIsDownloadedStatus(true);
-    //             }
-    //         } catch(e) {
-    //             console.log(e);
-    //         }
-    //     }
-    //
-    //     void fetchInfo();
-    // }, []);
+    useEffect(() => {
+        const fetchInfo = async () => {
+            try {
+                const result = await axios.post("https://api.gollm.xyz/downloadStatus", {
+                    model_name: modelName.replace(/\//g, '-_-')
+                });
+
+                if(result.status === 200 && result.data.status === "Downloaded") {
+                    setIsDownloadedStatus(true);
+                }
+            } catch(e) {
+                console.log(e);
+            }
+        }
+
+        if (!isDownloadedStatus) {
+            void fetchInfo();
+        } else {
+            setTimeLeft(prevTimeLeft => prevTimeLeft - 1);
+        }
+    }, []);
+
     useEffect(() => {
         let intervalId: any;
 
         if ( timeLeft > 0) {
             intervalId = setInterval(() => {
-                setTimeLeft(prevTimeLeft => prevTimeLeft - 1);
+                if(timeLeft - 1 !== 0) {
+                    setTimeLeft(prevTimeLeft => prevTimeLeft - 1);
+                }
             }, 1000);
         }
 
@@ -119,7 +127,10 @@ const TelegramLinkComponent = ({ modelName } : {modelName: string} ) => {
 
     const percentage = ((totalSeconds - timeLeft) / totalSeconds) * 100;
 
-    if(timeLeft !== 0 && !isDownloadedStatus) {
+    if(isDownloadedStatus) {
+        setTimeLeft(prevTimeLeft => prevTimeLeft - 1)
+    }
+    if(timeLeft !== 0 || !isDownloadedStatus) {
         return (
             <div className="h-2 w-[800px] bg-neutral-300 rounded-3xl">
                 <div className="h-2 bg-purple-900 border border-black ease-linear rounded-3xl" style={{ width: `${percentage}%`, transition: 'width 1s ease-in-out'  }}></div>
